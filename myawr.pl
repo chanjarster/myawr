@@ -761,7 +761,7 @@ sub get_perfstat {
 		return;
 	}
 
-	my $sth = $dbh->prepare("select @@GLOBAL.PERFORMANCE_SCHEMA");
+	my $sth = $dbh->prepare("select \@\@GLOBAL.PERFORMANCE_SCHEMA");
 	$sth->execute();
 	my $perfon=$sth->fetchrow_array();
     
