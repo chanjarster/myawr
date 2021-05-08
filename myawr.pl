@@ -471,6 +471,9 @@ sub get_mysqlstat {
     foreach my $row(@$stat) {
         $mystat2->{"$row->[0]"} = $row->[1];
     }
+    # variables removed in 8.0
+    $mystat2->{"Qcache_hits"} = "-1";
+    $mystat2->{"Qcache_inserts"} = "-1";
     
     # Get MySQL variables
     $mysql='show variables where variable_name in ("query_cache_size","thread_cache_size","table_definition_cache","key_buffer_size","join_buffer_size","sort_buffer_size","max_connections","table_open_cache","slow_launch_time","log_slow_queries","max_heap_table_size","tmp_table_size","innodb_open_files","open_files_limit"); ';
@@ -478,7 +481,9 @@ sub get_mysqlstat {
     foreach my $row(@$varb) {
         $vars->{"$row->[0]"} = $row->[1];
     }
-
+    # variables removed in 8.0
+    $vars->{"query_cache_size"} = "-1";
+    
     my ($running_thread_threshold,$times_per_hour)=$dbh_save->selectrow_array("select running_thread_threshold,times_per_hour from myawr.myawr_host where id=$tid");
     my $times_saved= $dbh_save->selectrow_array("select count(DISTINCT snap_id) cnt  from myawr_engine_innodb_status where snap_time>=DATE_ADD(now(),INTERVAL -1 HOUR) and host_id=$tid");
     my $now_running_threads=$mystat2->{"Threads_running"};
@@ -756,11 +761,11 @@ sub get_perfstat {
 		return;
 	}
 
-	my $sth = $dbh->prepare("select VARIABLE_VALUE from information_schema.GLOBAL_VARIABLES where VARIABLE_NAME='PERFORMANCE_SCHEMA'");
+	my $sth = $dbh->prepare("select @@GLOBAL.PERFORMANCE_SCHEMA");
 	$sth->execute();
 	my $perfon=$sth->fetchrow_array();
     
-    if ($perfon eq 'ON'){
+    if ($perfon eq '1'){
 
 		my $dbh_save = DBI->connect( "DBI:mysql:database=myawr;host=$thost;port=$tport","$tuser", "$tpswd", { 'RaiseError' => 0 ,AutoCommit => 0} );
 		if(not $dbh_save) {
